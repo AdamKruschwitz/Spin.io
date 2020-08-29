@@ -4,6 +4,15 @@ var config = {
     height: 480,
     backgroundColor: '#bfcc00',
     parent: 'phaser-example',
+    physics: {
+        default: 'matter',
+        matter: {
+            gravity: {
+                x: 0,
+                y: 0
+            }
+        }
+    },
     scene: {
         preload: preload,
         create: create,
@@ -13,27 +22,34 @@ var config = {
 
 var game = new Phaser.Game(config);
 
-var player, pointer, cursor;
+var localPlayer, onlinePlayer, pointer, cursor;
 
 var Sword = new Phaser.Class({
     initialize: function Sword(x, y, scene, parent) 
     {
         this.slowSpeed = 2;
         this.fastSpeed = 3.5;
+        this.currentSpeed = 3.5;
         this.skin = scene.add.triangle(x, y, 0, -15, 40, -15, 20, -105, 0x6666ff);
         this.skin.setStrokeStyle(4, 0x000000);
         this.parent = parent;
+        
+        this.skin.on('')
+    },
+    
+    setSpeedSlow: function()
+    {
+        this.currentSpeed = this.slowSpeed;
+    },
+    
+    setSpeedFast: function()
+    {
+        this.currentSpeed = this.fastSpeed;
     },
     
     update:
     function () {
-        if(cursor.space.isDown) {
-            this.skin.angle += this.slowSpeed;
-        }
-        else {
-            this.skin.angle += this.fastSpeed;
-        }
-        
+        this.skin.angle += this.currentSpeed;
         if(this.skin.angle > 360) this.skin.angle -= 360;
     }
     
@@ -62,11 +78,49 @@ var Player = new Phaser.Class({
     update:
     function(time)
     {
-        this.setCurrentSpeed(this.calcSpeedArrows());
         this.sword.update();
         this.move(this.currentSpeed);
     },
     
+    setCurrentSpeed: function(speed) 
+    {
+        this.currentSpeed = speed;
+    },
+    
+    move: function(currentSpeed) 
+    {
+        this.skin.x += currentSpeed[0];
+        this.skin.y += currentSpeed[1];
+        
+        this.sword.skin.x = this.skin.x;
+        this.sword.skin.y = this.skin.y;
+    }
+    
+});
+
+var LocalPlayer = new Phaser.Class({
+    Extends: Player,
+    
+    update:
+    function(time)
+    {
+        
+        this.setCurrentSpeed(this.calcSpeedArrows());
+        this.setSwordSpeed();
+        
+        this.move(this.currentSpeed);
+        this.sword.update();
+    },
+    
+    setSwordSpeed: 
+    function()
+    {
+        if(cursor.space.isDown) this.sword.setSpeedSlow();
+        else this.sword.setSpeedFast();
+    },
+    
+    /*
+    After trying this code out, playing the game with the mouse is super awkward. Using Arrow Keys instead.
     calcSpeedPointer: function()
     {
         var xDif = pointer.x - this.skin.x;
@@ -87,7 +141,8 @@ var Player = new Phaser.Class({
         
         return [xSpeed, ySpeed];
     },
-    
+    */
+                                   
     calcSpeedArrows: function()
     {
         // Default value
@@ -133,22 +188,7 @@ var Player = new Phaser.Class({
         return [xSpeed, ySpeed];
         
     },
-    
-    setCurrentSpeed: function(speed) 
-    {
-        this.currentSpeed = speed;
-    },
-    
-    move: function(currentSpeed) 
-    {
-        this.skin.x += currentSpeed[0];
-        this.skin.y += currentSpeed[1];
-        
-        this.sword.skin.x = this.skin.x;
-        this.sword.skin.y = this.skin.y;
-    }
-    
-});
+})
 
 //___________________________________PRELOAD______________________________________________
 // handle image loading
@@ -165,7 +205,8 @@ function create()
     pointer = this.input.activePointer;
     cursor = this.input.keyboard.createCursorKeys();
     
-    player = new Player(this, 200, 200);
+    localPlayer = new LocalPlayer(this, 200, 200);
+    onlinePlayer = new Player(this, 200, 400);
     
     
 }
@@ -176,6 +217,7 @@ function create()
 function update()
 {
     pointer = this.input.activePointer;
-    player.update();
+    localPlayer.update();
+    onlinePlayer.update();
 }
 
