@@ -1,5 +1,5 @@
-## Spin.io
-# A .io type game where many players congregate on a server and fight each other using swords that constantly spin around their character.
+# Spin.io
+A .io type game where many players congregate on a server and fight each other using swords that constantly spin around their character.
 
 ## Features Done
 1. Basic Controls
